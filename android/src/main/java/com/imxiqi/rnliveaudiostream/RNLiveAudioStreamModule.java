@@ -5,6 +5,9 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
 import android.util.Base64;
 import android.util.Log;
+import android.media.AudioManager;
+import android.media.AudioDeviceInfo;
+import android.content.Context;
 
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -76,6 +79,18 @@ public class RNLiveAudioStreamModule extends ReactContextBaseJavaModule {
 
         int recordingBufferSize = bufferSize * 3;
         recorder = new AudioRecord(audioSource, sampleRateInHz, channelConfig, audioFormat, recordingBufferSize);
+        if (options.hasKey("deviceId")) {
+            int deviceId = options.getInt("deviceId");
+            AudioManager audioManager = (AudioManager) getReactApplicationContext()
+                    .getSystemService(Context.AUDIO_SERVICE);
+            AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
+            for (AudioDeviceInfo device : devices) {
+                if (device.getId() == deviceId && device.isSource()) {
+                    recorder.setPreferredDevice(device);
+                    break;
+                }
+            }
+        }
     }
 
     @ReactMethod
